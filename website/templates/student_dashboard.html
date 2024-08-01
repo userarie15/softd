@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        margin: 0;
+        padding: 0
+        }
+    .sidebar {
+        width: 250px;
+        height: 100vh;
+        background-color: #78b1f3;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.356);
+        position: fixed;
+        top: 55px;
+        left: 0;
+        z-index: 99;
+    }
+    .sidebar button {
+        font-size: 1.1rem;
+        border: none;
+        outline: none;
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #78b1f3;
+        border-radius: 7px;
+        color: rgb(255, 255, 255);
+        display: flex;
+        align-items: center;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+        font-family: 'Open Sans', sans-serif; 
+    }
+    .sidebar button i {
+        margin-left: 10px;
+        width: 20px;
+    }
+    .sidebar button:hover {
+        background-color: #3870b1;
+        color: white;
+    }
+    .content {
+        margin-left: 250px;
+        padding: 20px;
+        margin-top: 55px;
+    }
+    .logout-button {
+        width: 100%;
+        text-align: center;
+        margin-top: auto;
+        margin-bottom: 35px;
+    }
+    .student-info-container {
+        top: 55px; /* Align with the bottom of the navbar */
+        bottom: 0; /* Fill the entire remaining height of the viewport */
+        overflow-y: auto; /* Enable scrolling if content exceeds viewport */
+        z-index: 130; /* Ensure it's below the navbar and sidebar */
+        display: none; /* Initially hide */
+        left: 250px; /* Adjust based on sidebar width */
+        right: 0; /* Fill remaining space */
+        border: 1px solid #383636;
+        box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.658);
+    }
+    .student-info {
+        display: none;
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        border-radius: 7px;
+        padding: 25px 40px;
+        z-index: 100;
+        width: 820px;
+        left: calc(50% - 100px); /* Center horizontally */
+        top: 0;
+
+    }
+    .announcement-container {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        background-color: #f0e68cab;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-family: 'Open Sans', sans-serif;
+        text-align: center;
+        align-items: center;
+    }
+    .announcement-container:hover {
+        background-color: #e7da63cc;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.404);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 5px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        position: relative;
+        font-family: 'Open Sans', sans-serif;
+    }
+    .close {
+        color: #b3da5a;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+</style>
+
+<div class="sidebar">
+    <button id="announcements-btn" class="btn btn-primary">
+        Announcements <i class="fa fa-bell"></i>
+    </button>
+    <button id="student-info-btn" class="btn btn-primary">
+        Student Info <i class="fa fa-user"></i>
+    </button>   
+    <button id="subjects-btn" class="btn btn-primary btn-block">
+        Subjects <i class="fas fa-book-open"></i>
+    </button>
+    <button id="student-grades-btn" class="btn btn-primary">
+        Student Grades <i class="fa fa-chart-bar"></i>
+    </button>
+    
+    <button id="enrollment-status-btn" class="btn btn-primary">
+        Enrollment Status <i class="fas fa-check-circle"></i>
+    </button>
+    
+    <div class="logout-button">
+        {% if current_user.is_authenticated %}
+            <form action="{{ url_for('auth.logout') }}" method="post">
+                <button type="submit" class="btn btn-danger">Log Out
+                    <i class="fa fa-sign-out"></i>
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="content">
+    <h2 id="student-info-header" align='center'class="student-info-header" style="display: none; color: #3a413c; font-family: 'Open Sans', sans-serif; ">
+        Student Information
+    </h2>
+
+    <div id="student-info-container" class="student-info-container">
+        <div id="student-info-dialog" class="student-info">
+            <p id="email-info">Email: {{ student.email }}</p>
+            <p id="student-name-info">Student's Name: {{ student.student_name }}</p>
+            <p id="dob-info">Date of Birth: {{ student.date_of_birth }}</p>
+            <p id="gender-info">Gender: {{ student.gender }}</p>
+            <p id="nationality-info">Nationality: {{ student.nationality }}</p>
+            <p id="address-info">Address: {{ student.address }}</p>
+            <p id="guardian-info">Guardian's Full Name: {{ student.parent_guardian_name }}</p>
+            <p id="relationship-info">Relationship to Student: {{ student.relationship_to_student }}</p>
+            <p id="contact-info">Guardian's Contact Number: {{ student.contact_number }}</p>
+            <p id="guardian-email-info">Guardian's Email: {{ student.email_gp }}</p>
+            <p id="emergency-contact-info">Emergency Contact's Name: {{ student.emergency_contact_name }}</p>
+            <p id="emergency-relationship-info">Emergency Relationship to Student: {{ student.emergency_relationship }}</p>
+            <p id="emergency-contact-number-info">Emergency Contact's Number: {{ student.emergency_contact_number }}</p>
+        </div>
+    </div>
+
+    <!-- Add this code where you want to display announcements -->
+<div id="announcements-container" class="announcements-container">
+    {% if announcements|length == 0 %}
+        <p>No announcements</p>
+    {% else %}
+        {% for announcement in announcements %}
+            <div class="announcement-container" id="announcement-{{ announcement.id }}">
+                <h3>{{ announcement.title }}</h3>
+                <p>{{ announcement.description }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Modal HTML (Add this somewhere in your template) -->
+<div id="announcement-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="announcement-modal-title"></h2>
+        <p id="announcement-modal-content"></p>
+    </div>
+</div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const studentInfoBtn = document.getElementById('student-info-btn');
+        const studentInfoContainer = document.getElementById('student-info-container');
+        const studentInfoDialog = document.getElementById('student-info-dialog');
+        const studentInfoHeader = document.getElementById('student-info-header');
+        const announcementsBtn = document.getElementById('announcements-btn');
+        const announcementsContainer = document.getElementById('announcements-container');
+        const modalTitle = document.getElementById('announcement-modal-title');
+        const modalContent = document.getElementById('announcement-modal-content');
+        const body = document.body; // Reference to body element
+        
+        // Function to show and hide elements
+        function toggleElement(element, show) {
+            element.style.display = show ? 'block' : 'none';
+        }
+
+        // Event listener for student info button
+        studentInfoBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            toggleElement(studentInfoContainer, true);
+            toggleElement(studentInfoHeader, true);
+            toggleElement(studentInfoDialog, true);
+            toggleElement(announcementsContainer, false);
+        });
+
+        // Event listener for announcements button
+        announcementsBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            toggleElement(announcementsContainer, true);
+            toggleElement(studentInfoContainer, false);
+            toggleElement(studentInfoHeader, false);
+        });
+
+        // Event listener for announcement containers
+        announcementsContainer.addEventListener('click', function(event) {
+            const target = event.target.closest('.announcement-container');
+            if (target) {
+                const title = target.querySelector('h3').innerText;
+                const content = target.querySelector('p').innerText;
+                modalTitle.innerText = title;
+                modalContent.innerText = content;
+                toggleElement(modal, true);
+                body.classList.add('blur-background'); // Apply background blur
+            }
+        });
+        
+        const modal = document.getElementById('announcement-modal');
+        const closeBtn = modal.querySelector('.close'); 
+
+        // Attach event listener to closeBtn here after the modal is loaded
+        closeBtn.addEventListener('click', function() {
+            toggleElement(modal, false); // Assuming you have a function to toggle visibility
+            body.classList.remove('blur-background'); // Remove background blur
+            
+        });
+            
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                toggleElement(modal, false);
+                body.classList.remove('blur-background'); // Remove background blur
+            
+            }
+        });
+    });
+    
+</script>
+{% endblock %}
+
+
+
