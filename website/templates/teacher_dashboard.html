@@ -8,6 +8,7 @@
         margin: 0;
         padding: 0;
     }
+
     .sidebar {
         width: 250px;
         height: 100vh;
@@ -20,7 +21,7 @@
         position: fixed;
         top: 55px;
         left: 0;
-        z-index: 99;
+        z-index: 1;
     }
     .sidebar button {
         font-size: 1.1rem;
@@ -231,13 +232,33 @@
     .alert .btn-close:hover {
         color: #0c5460; /* Darker color on hover */
     }
+    .subject-tile {
+        display: inline-block;
+        width: 200px;
+        height: 150px;
+        margin: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .subject-tile h3 {
+        margin: 0;
+    }
+    
+    .add-subject-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
 </style>
 
 <div class="sidebar">
     <button id="announcements-btn" class="btn btn-primary">Announcements <i class="fa fa-bell"></i></button>
-    <button id="students-btn" class="btn btn-primary btn-block mb-3">Students<i class="fa fa-user"></i></button>
     <button id="subjects-btn" class="btn btn-primary btn-block mb-3">Subjects <i class="fas fa-book-open"></i></button>
-    <button id="grades-btn" class="btn btn-primary btn-block mb-3">Grades <i class="fa fa-chart-bar"></i></button>
 
     <div class="logout-button">
         {% if current_user.is_authenticated %}
@@ -307,6 +328,51 @@
                 <p id="announcement-modal-description"></p>
             </div>
         </div>
+
+        <!-- Subject Section -->
+        <div id="subject-section" style="display: none;">
+            <button id="add-subject-btn" class="btn btn-primary">
+                Add Subject <i class="fa fa-plus"></i>
+            </button>
+            <div id="subject-tiles">
+                <!-- Subject tiles will be added here dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Subject Modal -->
+    <div id="add-subject-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="add-subject-close">&times;</span>
+            <h2>Add Subject</h2>
+            <form id="add-subject-form">
+                <label for="subject-name">Subject Name:</label>
+                <input type="text" id="subject-name" name="subject_name" required>
+                <label for="grade-level">Grade Level:</label>
+                <input type="text" id="grade-level" name="grade_level" required>
+                <label for="schedule-from">Schedule From:</label>
+                <input type="time" id="schedule-from" name="schedule_from" required>
+                <label for="schedule-to">Schedule To:</label>
+                <input type="time" id="schedule-to" name="schedule_to" required>
+                <button type="submit" class="btn btn-primary">Add Subject</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Subject Details Modal -->
+    <div id="subject-details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="subject-details-close">&times;</span>
+            <h2 id="subject-title"></h2>
+            <form id="add-student-form">
+                <label for="student-name">Student Name:</label>
+                <input type="text" id="student-name" name="student_name" required>
+                <label for="student-email">Student Email:</label>
+                <input type="email" id="student-email" name="student_email" required>
+                <button type="submit" class="btn btn-primary">Add Student</button>
+            </form>
+        </div>
+    </div>
     </div>
 </div>
 
@@ -357,6 +423,7 @@
                 toggleElement(addAnnouncementBtn, true);
             });
         }
+        
     
         // Show the add announcement modal
         if (addAnnouncementBtn && addAnnouncementModal) {
@@ -424,6 +491,107 @@
         button.addEventListener('click', function(e) {
             if (!confirm('Are you sure you want to delete this announcement?')) {
                 e.preventDefault();
+            }
+        });
+    });
+    
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const subjectsBtn = document.getElementById('subjects-btn');
+        const subjectSection = document.getElementById('subject-section');
+        const addSubjectBtn = document.getElementById('add-subject-btn');
+        const addSubjectModal = document.getElementById('add-subject-modal');
+        const addSubjectClose = document.getElementById('add-subject-close');
+        const addSubjectForm = document.getElementById('add-subject-form');
+        const subjectTiles = document.getElementById('subject-tiles');
+        const subjectDetailsModal = document.getElementById('subject-details-modal');
+        const subjectDetailsClose = document.getElementById('subject-details-close');
+        const subjectTitle = document.getElementById('subject-title');
+        const addStudentForm = document.getElementById('add-student-form');
+
+        function toggleElement(element, show) {
+            element.style.display = show ? 'block' : 'none';
+        }
+    
+        // Toggle subject section visibility
+        subjectsBtn.addEventListener('click', function() {
+            if (subjectSection.style.display === 'none' || subjectSection.style.display === '') {
+                subjectSection.style.display = 'block';
+            } else {
+                subjectSection.style.display = 'none';
+            }
+        });
+    
+        // Open add subject modal
+        addSubjectBtn.addEventListener('click', function() {
+            addSubjectModal.style.display = 'block';
+        });
+    
+        // Close add subject modal
+        addSubjectClose.addEventListener('click', function() {
+            addSubjectModal.style.display = 'none';
+        });
+    
+        // Handle add subject form submission
+        addSubjectForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const subjectName = document.getElementById('subject-name').value;
+            const gradeLevel = document.getElementById('grade-level').value;
+            const scheduleFrom = document.getElementById('schedule-from').value;
+            const scheduleTo = document.getElementById('schedule-to').value;
+    
+            // Create subject tile
+            const subjectTile = document.createElement('div');
+            subjectTile.classList.add('subject-tile');
+            subjectTile.innerHTML = `
+                <h3>${subjectName}</h3>
+                <p>Grade Level: ${gradeLevel}</p>
+                <p>Schedule: ${scheduleFrom} - ${scheduleTo}</p>
+                <button class="btn btn-primary" onclick="openSubjectDetails('${subjectName}')">View Details</button>
+            `;
+    
+            subjectTiles.appendChild(subjectTile);
+    
+            // Close add subject modal
+            addSubjectModal.style.display = 'none';
+    
+            // Clear form fields
+            addSubjectForm.reset();
+        });
+    
+        // Open subject details modal
+        window.openSubjectDetails = function(subjectName) {
+            subjectTitle.innerText = subjectName;
+            subjectDetailsModal.style.display = 'block';
+        }
+    
+        // Close subject details modal
+        subjectDetailsClose.addEventListener('click', function() {
+            subjectDetailsModal.style.display = 'none';
+        });
+    
+        // Handle add student form submission
+        addStudentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const studentName = document.getElementById('student-name').value;
+            const studentEmail = document.getElementById('student-email').value;
+    
+            // Add student to the subject (this would require additional server-side handling)
+    
+            // Close subject details modal
+            subjectDetailsModal.style.display = 'none';
+    
+            // Clear form fields
+            addStudentForm.reset();
+        });
+    
+        // Close modals when clicking outside of them
+        window.addEventListener('click', function(event) {
+            if (event.target == addSubjectModal) {
+                addSubjectModal.style.display = 'none';
+            }
+            if (event.target == subjectDetailsModal) {
+                subjectDetailsModal.style.display = 'none';
             }
         });
     });

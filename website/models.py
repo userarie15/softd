@@ -12,15 +12,11 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)  # Ensure email is not null
     password = db.Column(db.String(150), nullable=False)  # Ensure password is not null
-    last_name = db.Column(db.String(150), nullable=False)  # Ensure last_name is not null
-    first_name = db.Column(db.String(150), nullable=False)  # Ensure first_name is not null
     role = db.Column(db.String(50), nullable=False)  # Ensure role is not null
 
-    def __init__(self, email, password, last_name, first_name, role):
+    def __init__(self, email, password, role):
         self.email = email
         self.password = password
-        self.last_name = last_name
-        self.first_name = first_name
         self.role = role
 
     def __repr__(self):
@@ -55,3 +51,27 @@ class Announcement(db.Model):
 
     def __repr__(self):
         return f'<Announcement {self.title}>'
+    
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    grade_level = db.Column(db.String(50), nullable=False)
+    schedule_from = db.Column(db.String(50), nullable=False)
+    schedule_to = db.Column(db.String(50), nullable=False)
+
+    students = db.relationship('Student', secondary='subject_student', back_populates='subjects')
+
+# Define the Student model
+class Student(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+
+    # Many-to-many relationship with subjects
+    subjects = db.relationship('Subject', secondary='subject_student', back_populates='students')
+
+# Define the association table for the many-to-many relationship
+subject_student = db.Table('subject_student',
+    db.Column('subject_id', db.Integer, db.ForeignKey('subject.id'), primary_key=True),
+    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True)
+)
