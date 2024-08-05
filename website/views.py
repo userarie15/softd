@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from . import db
 # from .forms import StudentInfoForm
-from .models import StudentInfo, User, Announcement, Subject, Student
+from .models import StudentInfo, User, Announcement, CreatingClass, Grade, Schedule
 
 views = Blueprint('views', __name__)
 
@@ -31,19 +31,11 @@ def teacher_dashboard():
             db.session.commit()
             flash('Announcement added successfully!', category='success')
         
-        subject_name = request.form.get('subject_name')
-        grade_level = request.form.get('grade_level')
-        schedule_from = request.form.get('schedule_from')
-        schedule_to = request.form.get('schedule_to')
-        if subject_name and grade_level and schedule_from and schedule_to:
-            new_subject = Subject(name=subject_name, grade_level=grade_level, schedule_from=schedule_from, schedule_to=schedule_to)
-            db.session.add(new_subject)
-            db.session.commit()
-            flash('Subject added successfully!', category='success')
-    
+      
     announcements = Announcement.query.all()
-    subjects = Subject.query.all()  # Fetch all subjects
-    return render_template('teacher_dashboard.html', user=current_user, announcements=announcements, subjects=subjects, title='Teacher Dashboard')
+    curriculums = CreatingClass.query.all()  # Fetch all curriculums
+    
+    return render_template('teacher_dashboard.html', user=current_user, announcements=announcements, curriculums=curriculums, title='Teacher Dashboard')
 
 
 @views.route('/admin-dashboard', methods=['GET', 'POST'])
@@ -102,11 +94,13 @@ def admin_dashboard():
                 db.session.add(student_info)
             
             db.session.commit()
-            flash('Student information has been saved successfully!', category='Success')
+            flash('Student information has been saved successfully!', category='success')
         else:
             flash('No user found with this email address.', category='error')
 
-    return render_template('admin_dashboard.html')
+    grades = Grade.query.all()
+    schedules = Schedule.query.all()
+    return render_template('admin_dashboard.html', grades=grades, schedules=schedules)
 
 @views.route('/add_announcement', methods=['POST'], endpoint='add_announcement')
 @login_required
@@ -132,48 +126,32 @@ def delete_announcement(announcement_id):
         flash('Announcement not found or you are not authorized to delete it.', category='error')
     return redirect(url_for('views.teacher_dashboard'))
 
-@views.route('/add_subject', methods=['POST'])
+@views.route('/create_curriculum', methods=['POST'])
 @login_required
-def add_subject():
-    subject_name = request.form.get('subject_name')
-    grade_level = request.form.get('grade_level')
-    schedule_from = request.form.get('schedule_from')
-    schedule_to = request.form.get('schedule_to')
-    
-    if subject_name and grade_level and schedule_from and schedule_to:
-        new_subject = Subject(
-            name=subject_name,
-            grade_level=grade_level,
-            schedule_from=schedule_from,
-            schedule_to=schedule_to
+def create_curriculum():
+    grade_id = request.form['grade_id']
+    schedule_id = request.form['schedule_id']
+    subjects = request.form['subjects']
+    teacher = request.form['teacher']
+
+    grade = Grade.query.get(grade_id)
+    schedule = Schedule.query.get(schedule_id)
+
+    if grade and schedule:
+        new_curriculum = CreatingClass(
+            grade=grade,
+            schedule=schedule,
+            subjects=subjects,
+            teacher=teacher
         )
-        db.session.add(new_subject)
+        db.session.add(new_curriculum)
         db.session.commit()
-        flash('Subject added successfully!', category='success')
+        flash('Curriculum created successfully!', 'success')
     else:
-        flash('Please fill in all required fields.', category='error')
-    
-    return redirect(url_for('views.teacher_dashboard'))
+        flash('Invalid grade or schedule selected!', 'danger')
 
-# Route to handle adding a student (assuming you have a model for students)
-@views.route('/add_student', methods=['POST'])
-@login_required
-def add_student():
-    subject_id = request.form.get('subject_id')
-    student_name = request.form.get('student_name')
-    student_email = request.form.get('student_email')
-    
-    # Check if the subject exists
-    subject = Subject.query.get(subject_id)
-    if subject:
-        new_student = Student(name=student_name, email=student_email, subject_id=subject_id)
-        db.session.add(new_student)
-        db.session.commit()
-        flash('Student added successfully!', category='success')
-    else:
-        flash('Subject not found.', category='error')
+    return redirect(url_for('views.admin_dashboard'))
 
-    return redirect(url_for('views.teacher_dashboard'))
 
 @views.route('/', methods=['GET', 'POST'])
 @login_required

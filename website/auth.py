@@ -52,8 +52,6 @@ def sign_up():
     if request.method == 'POST':
         role = request.form.get('role')
         email = request.form.get('email')
-        last_name = request.form.get('lastName')
-        first_name = request.form.get('firstName')
         password1 = request.form.get('password1')
         password2 = request.form.get('password2')
 
@@ -68,7 +66,7 @@ def sign_up():
         elif len(password1) < 7:
             flash('Password must be at least 7 characters.', category='error')
         else:
-            new_user = User(email=email, last_name=last_name, first_name=first_name, password=generate_password_hash(password1, method='pbkdf2:sha256'), role=role)
+            new_user = User(email=email, password=generate_password_hash(password1, method='pbkdf2:sha256'), role=role)
             db.session.add(new_user)
             db.session.commit()
             flash('Account created!', category='success')

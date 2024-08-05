@@ -52,26 +52,30 @@ class Announcement(db.Model):
     def __repr__(self):
         return f'<Announcement {self.title}>'
     
-class Subject(db.Model):
+class Grade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    grade_level = db.Column(db.String(50), nullable=False)
-    schedule_from = db.Column(db.String(50), nullable=False)
-    schedule_to = db.Column(db.String(50), nullable=False)
+    grade = db.Column(db.String(100), nullable=False)  # Changed to String for consistency
 
-    students = db.relationship('Student', secondary='subject_student', back_populates='subjects')
+    def __repr__(self):
+        return f'<Grade {self.grade}>'
 
-# Define the Student model
-class Student(db.Model):
+class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    schedule = db.Column(db.String(100), nullable=False)
 
-    # Many-to-many relationship with subjects
-    subjects = db.relationship('Subject', secondary='subject_student', back_populates='students')
+    def __repr__(self):
+        return f'<Schedule {self.schedule}>'
 
-# Define the association table for the many-to-many relationship
-subject_student = db.Table('subject_student',
-    db.Column('subject_id', db.Integer, db.ForeignKey('subject.id'), primary_key=True),
-    db.Column('student_id', db.Integer, db.ForeignKey('student.id'), primary_key=True)
-)
+class CreatingClass(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    grade_id = db.Column(db.Integer, db.ForeignKey('grade.id'), nullable=False)
+    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id'), nullable=False)
+    subjects = db.Column(db.String(150), nullable=False)
+    teacher = db.Column(db.String(100), nullable=False)
+
+    # Relationships
+    grade = db.relationship('Grade', backref='curriculums')
+    schedule = db.relationship('Schedule', backref='curriculums')
+
+    def __repr__(self):
+        return f'<CreatingClass Grade {self.grade_id}, Schedule {self.schedule_id}, Subjects {self.subjects}>'

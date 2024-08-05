@@ -69,6 +69,9 @@
     .form-group {
         width: 100%;
       }
+      .d-none {
+        display: none;
+    }
 </style>
 
 <div class="container-fluid">
@@ -78,7 +81,8 @@
             <div class="sidebar">
                 <button id="student-info-btn" class="btn btn-primary btn-block mb-3">Student Info <i class="fa fa-user"></i></button>
                 <button id="announcements-btn" class="btn btn-primary btn-block mb-3">Announcements <i class="fa fa-bell"></i></button>
-                
+                <button id="curriculum-btn" class="btn btn-primary btn-block mb-3">Curriculum <i class="fa fa-book"></i></button>
+
                 <!-- logout button at the bottom of the sidebar -->
                <div class="logout-button">
                     {% if current_user.is_authenticated %}
@@ -175,9 +179,80 @@
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
-        </div>
+
+            <!-- Curriculum Creation Form -->
+    <div id="curriculum-form" class="d-none">
+        <h2>Create Curriculum</h2>
+        <!-- Form to Create Curriculum -->
+<form method="post" action="{{ url_for('views.create_curriculum') }}">
+    <div class="form-group">
+        <label for="grade_id">Grade</label>
+        <select id="grade_id" name="grade_id" class="form-control" required>
+            <option value="" disabled selected hidden>Grade</option>
+            <option value="1">Preschool</option>  <!-- Replace with actual IDs from your DB -->
+            <option value="2">Pre-K</option>
+            <option value="3">Kinder</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="schedule_id">Schedule</label>
+        <select id="schedule_id" name="schedule_id" class="form-control" required>
+            <option value="" disabled selected hidden>Schedule</option>
+            <option value="1">Morning</option>  <!-- Replace with actual IDs from your DB -->
+            <option value="2">Afternoon</option>
+        </select>
+    </div>
+            <div class="form-group">
+                <label for="subjects">Subjects</label>
+                <input type="text" id="subjects" name="subjects" class="form-control" placeholder="Enter Subjects" required>
+            </div>
+            <div class="form-group">
+                <label for="teacher">Teacher</label>
+                <input type="text" id="teacher" name="teacher" class="form-control" placeholder="Enter Teacher's Name" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Curriculum</button>
+        </form>
     </div>
 </div>
+
+           
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const studentInfoBtn = document.getElementById('student-info-btn');
+        const curriculumBtn = document.getElementById('curriculum-btn');
+        const studentInfoForm = document.getElementById('student-info-form');
+        const curriculumForm = document.getElementById('curriculum-form');
+
+        // Function to show and hide elements
+        function toggleElement(element, show) {
+            if (element) {
+                element.classList.toggle('d-none', !show);
+            }
+        }
+
+        // Initial setup to hide all forms
+        toggleElement(studentInfoForm, false);
+        toggleElement(curriculumForm, false);
+
+        // Event listener for student info button
+        if (studentInfoBtn) {
+            studentInfoBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                toggleElement(studentInfoForm, true);
+                toggleElement(curriculumForm, false);
+            });
+        }
+
+        // Event listener for curriculum button
+        if (curriculumBtn) {
+            curriculumBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                toggleElement(curriculumForm, true);
+                toggleElement(studentInfoForm, false);
+            });
+        }
+    });
+</script>
 
 
 {% endblock %}
