@@ -201,8 +201,8 @@
     {% endif %}
 
     <!-- Modal HTML (Add this somewhere in your template) -->
-<div id="announcement-modal" class="modal">
-    <div class="modal-content">
+     <div id="announcement-modal" class="modal">
+        <div class="modal-content">
         <span class="close">&times;</span>
         <h2 id="announcement-modal-title"></h2>
         <p id="announcement-modal-content"></p>
@@ -214,35 +214,69 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const studentInfoBtn = document.getElementById('student-info-btn');
-        const studentInfoForm = document.getElementById('student-info-form');
-        const curriculumBtn = document.getElementById('curriculum-btn');
-        const curriculumForm = document.getElementById('curriculum-form');
-
+        const studentInfoContainer = document.getElementById('student-info-container');
+        const studentInfoDialog = document.getElementById('student-info-dialog');
+        const studentInfoHeader = document.getElementById('student-info-header');
+        const announcementsBtn = document.getElementById('announcements-btn');
+        const announcementsContainer = document.getElementById('announcements-container');
+        const modalTitle = document.getElementById('announcement-modal-title');
+        const modalContent = document.getElementById('announcement-modal-content');
+        const body = document.body; // Reference to body element
+        
         // Function to show and hide elements
         function toggleElement(element, show) {
             element.style.display = show ? 'block' : 'none';
         }
 
-        // Hide all sections initially
-        toggleElement(studentInfoForm, false);
-        toggleElement(curriculumForm, false);
-
         // Event listener for student info button
         studentInfoBtn.addEventListener('click', function(event) {
             event.preventDefault();
-            toggleElement(studentInfoForm, true);
-            toggleElement(curriculumForm, false);
+            toggleElement(studentInfoContainer, true);
+            toggleElement(studentInfoHeader, true);
+            toggleElement(studentInfoDialog, true);
+            toggleElement(announcementsContainer, false);
         });
 
-        // Event listener for curriculum button
-        curriculumBtn.addEventListener('click', function(event) {
+        // Event listener for announcements button
+        announcementsBtn.addEventListener('click', function(event) {
             event.preventDefault();
-            toggleElement(curriculumForm, true);
-            toggleElement(studentInfoForm, false);
+            toggleElement(announcementsContainer, true);
+            toggleElement(studentInfoContainer, false);
+            toggleElement(studentInfoHeader, false);
         });
 
-        // Optionally add more event listeners or functionalities here
+        // Event listener for announcement containers
+        announcementsContainer.addEventListener('click', function(event) {
+            const target = event.target.closest('.announcement-container');
+            if (target) {
+                const title = target.querySelector('h3').innerText;
+                const content = target.querySelector('p').innerText;
+                modalTitle.innerText = title;
+                modalContent.innerText = content;
+                toggleElement(modal, true);
+                body.classList.add('blur-background'); // Apply background blur
+            }
+        });
+        
+        const modal = document.getElementById('announcement-modal');
+        const closeBtn = modal.querySelector('.close'); 
+
+        // Attach event listener to closeBtn here after the modal is loaded
+        closeBtn.addEventListener('click', function() {
+            toggleElement(modal, false); // Assuming you have a function to toggle visibility
+            body.classList.remove('blur-background'); // Remove background blur
+            
+        });
+            
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                toggleElement(modal, false);
+                body.classList.remove('blur-background'); // Remove background blur
+            
+            }
+        });
     });
+    
 </script>
 
 {% endblock %}

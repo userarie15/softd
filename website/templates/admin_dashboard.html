@@ -94,8 +94,8 @@
                      {% endif %}
                 </div>
             </div>
-        </div>
-
+   
+     </div>
         <!-- Main content area -->
         <div class="col-md-9">
             <div id="alerts">
@@ -180,59 +180,92 @@
                 </form>
             </div>
 
-            <!-- Curriculum Creation Form -->
-    <div id="curriculum-form" class="d-none">
-        <h2>Create Curriculum</h2>
-        <!-- Form to Create Curriculum -->
-<form method="post" action="{{ url_for('views.create_curriculum') }}">
-    <div class="form-group">
-        <label for="grade_id">Grade</label>
-        <select id="grade_id" name="grade_id" class="form-control" required>
-            <option value="" disabled selected hidden>Grade</option>
-            <option value="1">Preschool</option>  <!-- Replace with actual IDs from your DB -->
-            <option value="2">Pre-K</option>
-            <option value="3">Kinder</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="schedule_id">Schedule</label>
-        <select id="schedule_id" name="schedule_id" class="form-control" required>
-            <option value="" disabled selected hidden>Schedule</option>
-            <option value="1">Morning</option>  <!-- Replace with actual IDs from your DB -->
-            <option value="2">Afternoon</option>
-        </select>
-    </div>
-            <div class="form-group">
-                <label for="subjects">Subjects</label>
-                <input type="text" id="subjects" name="subjects" class="form-control" placeholder="Enter Subjects" required>
-            </div>
-            <div class="form-group">
-                <label for="teacher">Teacher</label>
-                <input type="text" id="teacher" name="teacher" class="form-control" placeholder="Enter Teacher's Name" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Create Curriculum</button>
-        </form>
-    </div>
-</div>
+             <!-- Announcements Section (existing) -->
+             <div id="announcements" style="display: none;">
+                <h2>Announcements</h2>
+                <form method="post" action="{{ url_for('views.admin_dashboard') }}">
+                    <input type="hidden" name="form_type" value="announcement">
+                    <div class="form-group">
+                        <label for="title">Title</label>
+                        <input type="text" id="title" name="title" class="form-control" placeholder="Enter Announcement Title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control" placeholder="Enter Announcement Description" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Announcement</button>
+                </form>
 
+                <h3>Existing Announcements</h3>
+                {% for announcement in announcements %}
+                <div class="announcement-item">
+                    <h4>{{ announcement.title }}</h4>
+                    <p>{{ announcement.description }}</p>
+                    <form method="post" action="{{ url_for('views.admin_dashboard') }}">
+                        <input type="hidden" name="announcement_id" value="{{ announcement.id }}">
+                        <button type="submit" class="btn btn-danger">Delete Announcement</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Curriculum Creation Form -->
+             <div id="curriculum-form" style="display: none;">
+                <h2>Create Curriculum</h2>
+                <!-- Form to Create Curriculum -->
+                 <form method="post" action="{{ url_for('views.create_curriculum') }}">
+                    <div class="form-group">
+                        <label for="grade_id">Grade</label>
+                        <select id="grade_id" name="grade_id" class="form-control" required>
+                            <option value="" disabled selected hidden>Grade</option>
+                            <option value="1">Preschool</option>  <!-- Replace with actual IDs from your DB -->
+                            <option value="2">Pre-K</option>
+                            <option value="3">Kinder</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="schedule_id">Schedule</label>
+                        <select id="schedule_id" name="schedule_id" class="form-control" required>
+                            <option value="" disabled selected hidden>Schedule</option>
+                            <option value="1">Morning</option>  <!-- Replace with actual IDs from your DB -->
+                            <option value="2">Afternoon</option>
+                        </select>
+                    </div>
+                            <div class="form-group">
+                                <label for="subjects">Subjects</label>
+                                <input type="text" id="subjects" name="subjects" class="form-control" placeholder="Enter Subjects" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="teacher">Teacher</label>
+                                <input type="text" id="teacher" name="teacher" class="form-control" placeholder="Enter Teacher's Name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Create Curriculum</button>
+                        </form>
+                    </div>
+                </div>
+                
+            
            
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const studentInfoBtn = document.getElementById('student-info-btn');
         const curriculumBtn = document.getElementById('curriculum-btn');
+        const announcementsBtn = document.getElementById('announcements-btn'); // New button
         const studentInfoForm = document.getElementById('student-info-form');
         const curriculumForm = document.getElementById('curriculum-form');
+        const announcementsSection = document.getElementById('announcements'); // New section
 
-        // Function to show and hide elements
         function toggleElement(element, show) {
             if (element) {
-                element.classList.toggle('d-none', !show);
+                element.style.display = show ? 'block' : 'none';
             }
         }
+        
 
         // Initial setup to hide all forms
         toggleElement(studentInfoForm, false);
         toggleElement(curriculumForm, false);
+        toggleElement(announcementsSection, false); // Hide announcements section initially
 
         // Event listener for student info button
         if (studentInfoBtn) {
@@ -240,19 +273,34 @@
                 event.preventDefault();
                 toggleElement(studentInfoForm, true);
                 toggleElement(curriculumForm, false);
+                toggleElement(announcementsSection, false); // Hide announcements section
             });
         }
 
-        // Event listener for curriculum button
-        if (curriculumBtn) {
+         // Event listener for curriculum button
+         if (curriculumBtn) {
             curriculumBtn.addEventListener('click', function(event) {
                 event.preventDefault();
+                console.log('Curriculum button clicked'); // Debugging statement
                 toggleElement(curriculumForm, true);
                 toggleElement(studentInfoForm, false);
-            });
-        }
-    });
+                toggleElement(announcementsSection, false); // Hide announcements section
+        });
+    }
+
+        // Event listener for announcements button
+        if (announcementsBtn) {
+            announcementsBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                console.log('Announcements button clicked'); // Debugging statement
+                toggleElement(announcementsSection, true);
+                toggleElement(studentInfoForm, false);
+                toggleElement(curriculumForm, false);
+        });
+    }
+});
 </script>
+
 
 
 {% endblock %}

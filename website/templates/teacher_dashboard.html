@@ -314,7 +314,7 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 align='center'>Add Announcement</h2>
-            <form id="announcement-form" method="POST" action="{{ url_for('views.add_announcement') }}">
+            <form id="announcement-form" method="POST" action="{{ url_for('views.teacher_dashboard') }}">
                 <label for="title">Title:</label>
                 <input type="text" id="title" name="title" placeholder="Title of Announcement" required><br><br>
                 <label for="description">Description:</label>
@@ -345,8 +345,9 @@
                     <div class="announcement-container" data-title="{{ announcement.title }}" data-description="{{ announcement.description }}">
                         <h3>{{ announcement.title }}</h3>
                         <p>{{ announcement.description }}</p>
-                        <form action="{{ url_for('views.delete_announcement', announcement_id=announcement.id) }}" method="post" style="display: inline;">
-                            <button type="del" class="delete-button btn btn-delete">
+                        <form action="{{ url_for('views.teacher_dashboard') }}" method="post" style="display: inline;">
+                            <input type="hidden" name="announcement_id" value="{{ announcement.id }}">
+                            <button type="submit" class="delete-button btn btn-delete">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>
@@ -492,7 +493,7 @@
             announcementForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 const formData = new FormData(announcementForm);
-    
+
                 fetch(announcementForm.action, {
                     method: 'POST',
                     body: formData,
@@ -500,12 +501,19 @@
                     if (response.ok) {
                         toggleElement(addAnnouncementModal, false);
                         body.classList.remove('blur-background');
+                        // Show success alert
+                        const alert = document.getElementById('announcement-notification');
+                        if (alert) {
+                            alert.style.display = 'block';
+                            setTimeout(() => alert.style.display = 'none', 3000); // Hide after 3 seconds
+                        }
                         // Optionally, refresh announcements
                         // location.reload();
                     }
                 });
             });
         }
+
     
         const deleteButtons = document.querySelectorAll('.btn-delete');
         deleteButtons.forEach(button => {
