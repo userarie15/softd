@@ -135,6 +135,71 @@
     .info-title {
         font-weight: bold;
     }
+    .subjects-container {
+        margin-top: 20px;
+    }
+    .subject-item {
+        margin-bottom: 10px;
+    }
+    /* Dropdown Styles */
+    select {
+        font-size: 1rem;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        width: 100%;
+        box-sizing: border-box; /* Ensures padding is included in width */
+        margin-bottom: 10px; /* Space between dropdowns */
+    }
+
+    select:focus {
+        border-color: #78b1f3; /* Highlight border on focus */
+        outline: none;
+    }
+
+    /* Container for Subjects */
+    .subjects-container {
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+    }
+    /* Styles for individual subject items */
+    .subject-item {
+        position: relative; /* Create positioning context for the button */
+        display: flex;
+        flex-direction: column; /* Stack children vertically */
+        justify-content: center; /* Center content vertically */
+        padding: 15px;
+        background-color: #f0e68c; /* Same yellow background as the announcements container */
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-family: 'Open Sans', sans-serif;
+    }
+    
+    .subject-item button {
+        position: absolute; /* Position button absolutely within container */
+        right: 15px; /* Adjust spacing from right edge */
+        transform: translateY(-50%); /* Adjust position based on container's height */
+        bottom: 27%; /* Center vertically */
+    }
+    
+
+    .subject-item:hover {
+        background-color: #e7da63; /* Slightly darker yellow on hover */
+    }
+    /* Add margin to create space between the button and the subjects list */
+    .subjects-list {
+        margin-top: 40px; /* Adjust this value as needed */
+    }
+
+
 
 </style>
 
@@ -199,6 +264,73 @@
             </div>
         {% endfor %}
     {% endif %}
+</div>
+
+<!-- Add this code where you want to display subjects -->
+<div id="subjects-container" class="subjects-container" style="display: none;">
+    <h3>Filter Subjects</h3>
+    <form method="POST" action="{{ url_for('views.student_dashboard') }}">
+        <label for="level">Select Level:</label>
+        <select name="level" id="level" required>
+            <option value="">Choose a level</option>
+            {% for level in levels %}
+                <option value="{{ level.id }}">{{ level.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="schedule">Select Schedule:</label>
+        <select name="schedule" id="schedule" required>
+            <option value="">Choose a schedule</option>
+            {% for schedule in schedules %}
+                <option value="{{ schedule.id }}">{{ schedule.name }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary">Show Subjects</button>
+    </form>
+    
+    <div id="subjects-list" class="subjects-list">
+        {% if subjects %}
+            <h3>Available Subjects:</h3>
+            {% for subject in subjects %}
+                <div class="subject-item">
+                    <h4>{{ subject.subject }}</h4>
+                    <p>Instructor: {{ subject.instructor }}</p>
+                    <p>Time: {{ subject.time }}</p>
+                    {% if subject.enrolled %}
+                        <button class="btn btn-secondary" disabled>Reserved</button>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('views.student_dashboard') }}">
+                        <input type="hidden" name="reserve" value="true">
+                        <input type="hidden" name="curriculum_id" value="{{ subject.id }}">
+                        <button type="submit" class="btn btn-primary">Reserve</button>
+                    </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No subjects available</p>
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- Add this code where you want to display the enrollment status -->
+<div id="enrollment-status-container" class="enrollment-status-container" style="display: none;">
+    <h3>Enrollment Status:</h3>
+    {% if reserved_subjects %}
+        {% for subject in reserved_subjects %}
+            <div class="subject-item">
+                <h4>{{ subject.subject }}</h4>
+                <p>Instructor: {{ subject.instructor }}</p>
+                <p>Time: {{ subject.time }}</p>
+    
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No subjects reserved yet.</p>
+    {% endif %}
+</div>
 
     <!-- Modal HTML (Add this somewhere in your template) -->
      <div id="announcement-modal" class="modal">
@@ -219,6 +351,10 @@
         const studentInfoHeader = document.getElementById('student-info-header');
         const announcementsBtn = document.getElementById('announcements-btn');
         const announcementsContainer = document.getElementById('announcements-container');
+        const subjectsBtn = document.getElementById('subjects-btn');
+        const subjectsContainer = document.getElementById('subjects-container');
+        const enrollmentStatusBtn = document.getElementById('enrollment-status-btn');
+        const enrollmentStatusContainer = document.getElementById('enrollment-status-container');
         const modalTitle = document.getElementById('announcement-modal-title');
         const modalContent = document.getElementById('announcement-modal-content');
         const body = document.body; // Reference to body element
@@ -235,6 +371,8 @@
             toggleElement(studentInfoHeader, true);
             toggleElement(studentInfoDialog, true);
             toggleElement(announcementsContainer, false);
+            toggleElement(subjectsContainer, false);
+            toggleElement(enrollmentStatusContainer, false);
         });
 
         // Event listener for announcements button
@@ -243,7 +381,27 @@
             toggleElement(announcementsContainer, true);
             toggleElement(studentInfoContainer, false);
             toggleElement(studentInfoHeader, false);
+            toggleElement(subjectsContainer, false);
+            toggleElement(enrollmentStatusContainer, false);
         });
+        // Event listener for subjects button
+        subjectsBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            toggleElement(subjectsContainer, true);
+            toggleElement(studentInfoContainer, false);
+            toggleElement(studentInfoHeader, false);
+            toggleElement(announcementsContainer, false);
+            toggleElement(enrollmentStatusContainer, false);
+        });
+        enrollmentStatusBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+            toggleElement(enrollmentStatusContainer, true);
+            toggleElement(studentInfoContainer, false);
+            toggleElement(studentInfoHeader, false);
+            toggleElement(announcementsContainer, false);
+            toggleElement(subjectsContainer, false);
+        });
+
 
         // Event listener for announcement containers
         announcementsContainer.addEventListener('click', function(event) {

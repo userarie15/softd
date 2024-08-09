@@ -96,7 +96,7 @@
         border-radius: 8px; 
         position: relative;
         text-align: left; 
-        font-family: 'Open Sans', sans-serif;
+
     }
     .close {
         color: #aaa;
@@ -145,7 +145,7 @@
         max-width: 1000px; /* Max width for larger screens */
         box-sizing: border-box; /* Include padding and border in width */
         height: auto; /* Set height to auto to fit content */
-        max-height: 110px; /* Adjust max height to make it shorter */
+        max-height: 140px; /* Adjust max height to make it shorter */
         overflow: hidden; /* Hide overflow text */
     }
     #announcements-container {
@@ -169,8 +169,8 @@
         box-sizing: border-box; /* Include padding and border in width */
     }
     button[type="submit"] {
-        background-color: #4CAF50;
-        color: white;
+        background-color: #f0e68cab;
+        color: rgb(31, 30, 30);
         padding: 10px 15px;
         border: none;
         border-radius: 4px;
@@ -178,7 +178,7 @@
         font-size: 16px;
     }
     button[type="submit"]:hover {
-        background-color: #45a049;
+        background-color: #b33120;
     }
 
     .announcement-content {
@@ -199,7 +199,7 @@
         transition: color 0.3s ease; /* Smooth transition for hover effect */
     }
     .delete-button:hover {
-        color: #292929 !important; /* Color on hover */
+        color: #d62525 !important; /* Color on hover */
     }
 
     .alert {
@@ -232,27 +232,47 @@
     .alert .btn-close:hover {
         color: #0c5460; /* Darker color on hover */
     }
-    .subject-tile {
-        display: inline-block;
-        width: 200px;
-        height: 150px;
-        margin: 10px;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        position: relative;
-    }
-    
     #subjects-section {
-        display: none;
-        padding: 20px;
-        margin-left: 250px;
-        margin-top: 55px;
+        display: block;
+        padding: 10px;
+        text-align: center;
+        position: relative; /* Allow absolute positioning of children if needed */
     }
     
-    .curriculum-container {
+    #subjects-header {
+        display: block; /* Ensure it's a block element */
+        text-align: center;
+        margin-bottom: 10px; /* Space below the header */
+        font-size: 30px; /* Adjust size as necessary */
+        color: #3a413c; /* Header color */
+        font-family: 'Open Sans', sans-serif;
+        position: relative; /* Ensure it’s properly positioned */
+        z-index: 5; /* Ensure it’s above the container */
+    }
+    
+    #subjects-container {
+        display: block; /* Ensure block display */
+        text-align: center; /* Align text to the left */
+        width: 100%; /* Full width of its parent */
+        max-width: 1000px; /* Max width for larger screens */
+        margin: 0 auto; /* Center the container */
+        font-family: 'Open Sans', sans-serif;
+        position: relative; /* Ensure it’s properly positioned */
+        z-index: 0; /* Ensure it’s below the header */
+    }
+    .subjects-container {
+        display: block; /* Ensure block display */
+        text-align: left; /* Align text to the left */
+        width: 100%; /* Full width of its parent */
+        max-width: 1000px; /* Max width for larger screens */
+        margin: 0 auto; /* Center the container */
+        font-family: 'Open Sans', sans-serif;
+        position: relative; /* Ensure it’s properly positioned */
+        z-index: 0; /* Ensure it’s below the header */
+    }
+    
+    .subject-tile {
+        display: block;
         padding: 20px;
         margin-bottom: 10px;
         background-color: #f0e68cab;
@@ -260,42 +280,22 @@
         cursor: pointer;
         transition: background-color 0.3s;
         text-align: left;
-        align-items: center;
-        width: 100%;
-        max-width: 1000px;
-        box-sizing: border-box;
-        height: auto;
-        max-height: 110px;
-        overflow: hidden;
+        width: 100%; /* Ensure it takes full available width */
+        max-width: 1000px; /* Max width for larger screens */
+        box-sizing: border-box; /* Include padding and border in width */
+        height: auto; /* Set height to auto to fit content */
+        overflow: hidden; /* Hide overflow text */
     }
-
-    .curriculum-container:hover {
+    
+    .subject-tile:hover {
         background-color: #e7da63cc;
     }
-
-    .curriculum-details {
-        padding-right: 40px;
-        flex: 1;
-    }
-
-    #curriculum-detail-modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5);
-        align-items: center;
-        justify-content: center;
-    }
+    
 </style>
 
 <div class="sidebar">
     <button id="announcements-btn" class="btn btn-primary">Announcements <i class="fa fa-bell"></i></button>
-    <button id="subjects-btn" class="btn btn-primary btn-block mb-3">Subjects <i class="fas fa-book-open"></i></button>
+    <button id="subjects-btn" class="btn btn-primary btn-block mb-3">Curriculum <i class="fas fa-book-open"></i></button>
 
     <div class="logout-button">
         {% if current_user.is_authenticated %}
@@ -313,7 +313,7 @@
     <div id="announcement-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2 align='center'>Add Announcement</h2>
+            <h2 align='center' style="color: #3a413c; font-family: 'Open Sans', sans-serif;">Add Announcement</h2>
             <form id="announcement-form" method="POST" action="{{ url_for('views.teacher_dashboard') }}">
                 <label for="title">Title:</label>
                 <input type="text" id="title" name="title" placeholder="Title of Announcement" required><br><br>
@@ -337,10 +337,10 @@
         </button>
 
         <div id="announcements-container">
-            <h2 id="announcements-header" style="color: #3a413c; font-family: 'Open Sans', sans-serif;">Announcements</h2>
             {% if announcements|length == 0 %}
                 <p>No Announcements</p>
             {% else %}
+            <h2 id="announcements-header" style="color: #3a413c; font-family: 'Open Sans', sans-serif;">Announcements</h2>
                 {% for announcement in announcements %}
                     <div class="announcement-container" data-title="{{ announcement.title }}" data-description="{{ announcement.description }}">
                         <h3>{{ announcement.title }}</h3>
@@ -367,22 +367,24 @@
     </div>
     
     <div id="subjects-section">
-        <h2>Subjects</h2>
         <div id="subjects-container">
+            {% if curriculums|length == 0 %}
+                <p>No Curriculums Added Yet</p>
+            {% else %}
+            <h3 id="subjects-header">Curriculum</h3>
             {% for curriculum in curriculums %}
-                <div class="curriculum-container">
-                    <h3>{{ curriculum.subjects }}</h3>
-                    <p>Grade: {{ curriculum.grade.grade }}</p>
-                    <p>Schedule: {{ curriculum.schedule.schedule }}</p>
-                    <p>Teacher: {{ curriculum.teacher }}</p>
+                <div class="subject-tile">
+                    <h3>{{ curriculum.subject }}</h3>
+                    <p>Grade: {{ curriculum.level.name }}</p>
+                    <p>Schedule: {{ curriculum.schedule.name }}</p>
+                    <p>Teacher: {{ curriculum.instructor }}</p>
                 </div>
             {% endfor %}
+            {% endif %}
         </div>
     </div>
-</div>
     
-
-
+    
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -399,9 +401,6 @@
     
         const subjectsBtn = document.getElementById('subjects-btn');
         const subjectsSection = document.getElementById('subjects-section');
-        const curriculumDetailModal = document.getElementById('curriculum-detail-modal');
-        const closeCurriculumDetail = document.getElementById('curriculum-detail-close');
-        const curriculumContainers = document.querySelectorAll('.curriculum-container');
         const body = document.body;
     
         // Function to show and hide elements
@@ -524,27 +523,6 @@
             });
         });
     
-        // Event listener for curriculum containers
-        curriculumContainers.forEach(container => {
-            container.addEventListener('click', function() {
-                const title = container.getAttribute('data-title');
-                const details = container.getAttribute('data-details');
-                const modalTitle = document.getElementById('curriculum-modal-title');
-                const modalDetails = document.getElementById('curriculum-modal-details');
-                modalTitle.innerText = title;
-                modalDetails.innerText = details;
-                toggleElement(curriculumDetailModal, true);
-                body.classList.add('blur-background');
-    });
-});
-    
-        // Close the curriculum detail modal
-        if (closeCurriculumDetail) {
-            closeCurriculumDetail.addEventListener('click', function() {
-                toggleElement(curriculumDetailModal, false);
-                body.classList.remove('blur-background');
-            });
-        }
     
         // Initialize by hiding both sections
         toggleElement(announcementsSection, false);

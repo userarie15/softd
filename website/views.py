@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from . import db
 # from .forms import StudentInfoForm
-from .models import StudentInfo, User, Announcement, CreatingClass, Grade, Schedule
+from .models import StudentInfo, User, Announcement, Curriculum, Schedule, Curriculum, Level, Enrol
 
 views = Blueprint('views', __name__)
 
@@ -14,10 +14,31 @@ def student_dashboard():
     # Retrieve the student information for the current logged-in user
     student_info = StudentInfo.query.filter_by(user_id=current_user.id).first()
     announcements = Announcement.query.all()
-    
-    # Render the student dashboard template with the student information
-    return render_template('student_dashboard.html', student=student_info, announcements=announcements, title='Student Dashboard')
+    levels = Level.query.all()
+    schedules = Schedule.query.all()
+    subjects = []
 
+    if request.method == 'POST':
+        # Handle the selection of level and schedule to display subjects
+        if request.form.get('level') and request.form.get('schedule'):
+            level_id = request.form.get('level')
+            schedule_id = request.form.get('schedule')
+            subjects = Curriculum.query.filter_by(level_id=level_id, schedule_id=schedule_id).all()
+
+        # Handle the reservation of a subject
+        if request.form.get('reserve'):
+            curriculum_id = request.form.get('curriculum_id')
+            existing_enrollment = Enrol.query.filter_by(user_id=current_user.id, curriculum_id=curriculum_id).first()
+            if not existing_enrollment:
+                new_enrollment = Enrol(user_id=current_user.id, curriculum_id=curriculum_id)
+                db.session.add(new_enrollment)
+                db.session.commit()
+                flash('Successfully reserved the subject!', 'success')
+    
+    # Retrieve reserved subjects
+    reserved_subjects = Curriculum.query.join(Enrol).filter(Enrol.user_id == current_user.id).all()
+    # Render the student dashboard template with the student information
+    return render_template('student_dashboard.html', student=student_info, announcements=announcements, levels=levels, schedules=schedules, subjects=subjects,  reserved_subjects=reserved_subjects, title='Student Dashboard')
    
 @views.route('/teacher-dashboard', methods=['GET', 'POST'])
 @login_required
@@ -44,7 +65,7 @@ def teacher_dashboard():
 
 
     announcements = Announcement.query.all()
-    curriculums = CreatingClass.query.all()
+    curriculums = Curriculum.query.all()
     
     return render_template('teacher_dashboard.html', user=current_user, announcements=announcements, curriculums=curriculums, title='Teacher Dashboard')
 
@@ -81,9 +102,9 @@ def admin_dashboard():
                     student_info.parent_guardian_name = parent_guardian_name
                     student_info.relationship_to_student = relationship_to_student
                     student_info.contact_number = contact_number
-                    student_info.email_gp = email_gp
                     student_info.emergency_contact_name = emergency_contact_name
-                    student_info.emergency_relationship = emergency_relationship
+                    student_info.emergency_relationship 
+                    student_info.email_gp = email_gp= emergency_relationship
                     student_info.emergency_contact_number = emergency_contact_number
                 else:
                     student_info = StudentInfo(
@@ -118,6 +139,8 @@ def admin_dashboard():
                 db.session.add(new_announcement)
                 db.session.commit()
                 flash('Announcement added successfully!', category='success')
+
+                return redirect(url_for('views.admin_dashboard'))
         
         elif 'announcement_id' in request.form:
             # Handle announcement deletion
@@ -128,59 +151,56 @@ def admin_dashboard():
                 db.session.commit()
                 flash('Announcement deleted successfully!', category='success')
 
+        elif 'level_name' in request.form:
+            level_name = request.form.get('level_name')
+            if level_name:
+                new_level = Level(name=level_name)
+                db.session.add(new_level)
+                db.session.commit()
+                flash('Level added successfully!', category='success')
 
-    return render_template('admin_dashboard.html', grades = Grade.query.all(), schedules = Schedule.query.all(), announcements=Announcement.query.all())
-'''
-@views.route('/add_announcement', methods=['POST'], endpoint='add_announcement')
-@login_required
-def add_announcement():
-    title = request.form.get('title')
-    description = request.form.get('description')
-    if title and description:
-        new_announcement = Announcement(title=title, description=description, created_by=current_user.id)
-        db.session.add(new_announcement)
-        db.session.commit()
-        flash('Announcement added successfully!', category='success')
-    return redirect(url_for('views.teacher_dashboard'))
+        elif 'schedule_name' in request.form:
+            schedule_name = request.form.get('schedule_name')
+            if schedule_name:
+                new_schedule = Schedule(name=schedule_name)
+                db.session.add(new_schedule)
+                db.session.commit()
+                flash('Schedule added successfully!', category='success')
 
-@views.route('/delete-announcement/<int:announcement_id>', methods=['POST'])
+        elif 'level_id' in request.form and 'schedule_id' in request.form:
+            level_id = request.form.get('level_id')
+            schedule_id = request.form.get('schedule_id')
+            subject = request.form.get('subject')
+            time = request.form.get('time')
+            instructor = request.form.get('instructor')
+            if level_id and schedule_id and subject and time and instructor:
+                new_schedule_entry = Curriculum(
+                    level_id=level_id,
+                    schedule_id=schedule_id,
+                    subject=subject,
+                    time=time,
+                    instructor=instructor
+                )
+                db.session.add(new_schedule_entry)
+                db.session.commit()
+                flash('Schedule entry added successfully!', category='success')
+        
+        elif 'curriculum_id' in request.form:
+            # Handle curriculum deletion
+            curriculum_id = request.form.get('curriculum_id')
+            curriculum = Curriculum.query.get(curriculum_id)
+            if curriculum:
+                # Delete associated enrollments first
+                Enrol.query.filter_by(curriculum_id=curriculum_id).delete()
 
-@login_required
-def delete_announcement(announcement_id):
-    announcement = Announcement.query.get(announcement_id)
-    if announcement and (current_user.role == 'teacher' or current_user.role == 'admin'):
-        db.session.delete(announcement)
-        db.session.commit()
-        flash('Announcement deleted successfully!', category='success')
-    else:
-        flash('Announcement not found or you are not authorized to delete it.', category='error')
-    return redirect(url_for('views.teacher_dashboard'))
-'''
-@views.route('/create_curriculum', methods=['POST'])
-@login_required
-def create_curriculum():
-    grade_id = request.form['grade_id']
-    schedule_id = request.form['schedule_id']
-    subjects = request.form['subjects']
-    teacher = request.form['teacher']
+                # Delete the curriculum
+                db.session.delete(curriculum)
+                db.session.commit()
+                flash('Curriculum and all associated enrollments deleted successfully!', category='success')
+            
+            
 
-    grade = Grade.query.get(grade_id)
-    schedule = Schedule.query.get(schedule_id)
-
-    if grade and schedule:
-        new_curriculum = CreatingClass(
-            grade=grade,
-            schedule=schedule,
-            subjects=subjects,
-            teacher=teacher
-        )
-        db.session.add(new_curriculum)
-        db.session.commit()
-        flash('Curriculum created successfully!', 'success')
-    else:
-        flash('Invalid grade or schedule selected!', 'danger')
-
-    return redirect(url_for('views.admin_dashboard'))
+    return render_template('admin_dashboard.html', curriculums=Curriculum.query.all(), levels=Level.query.all(), schedules=Schedule.query.all(), announcements=Announcement.query.all())
 
 
 @views.route('/', methods=['GET', 'POST'])
